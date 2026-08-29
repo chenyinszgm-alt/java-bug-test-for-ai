@@ -81,4 +81,21 @@
 
 ---
 
+## 六、修复记录（2026-08-29 追加）
+
+针对评审发现的全部 21 个问题（13 个预埋 + 8 个额外），修复方案如下：
+
+| 文件 | 修复内容 |
+|---|---|
+| `model/Order.java` | equals/hashCode 改为基于业务键 id，字段比较统一用 `Objects.equals`（P1、E6） |
+| `util/DateUtils.java` | 改用不可变且线程安全的 `java.time.DateTimeFormatter`，parse 增加 null/blank 保护（P2） |
+| `service/InventoryService.java` | 改用 `ConcurrentHashMap`，扣减改为 `compute` 内原子完成 check-then-act，消除超卖（P3） |
+| `repository/OrderRepository.java` | 删除 SQL 字符串拼接，过滤改 `customerName.equals(...)` 消除 NPE，参数判空（P4、E5） |
+| `service/PriceCalculator.java` | `new BigDecimal(double)` → `BigDecimal.valueOf`；`setScale(2)` → `setScale(2, RoundingMode.HALF_UP)`；lineTotal 增加单价判空（P5、P6） |
+| `service/OrderService.java` | `findById().get()` → `getOrder()`（P8）；删除 `Long ==` 判断（P7）；分页改 `(page-1)*size`、long 防溢出、按 id 排序、size 上限 100（P9、E8）；BigDecimal 比较改 `compareTo`（P10）；下单改为先扣库存、失败逐项回滚（E2）；退款增加 PAID 状态校验与足额校验（E3）；items 防御性拷贝（E7） |
+| `service/ReportService.java` | 改 `Files.write` 自动管理资源；IOException 转为业务异常上抛，消除假成功（P12、P13） |
+| `controller/OrderController.java` | `split(".")` → `split("\\.")`（P11）；payOrder 使用 service 返回值并判空 paidAt（E4）；export 去掉客户端可控 path，改为服务端固定 reports/ 目录生成（E1） |
+
+**修复后复检**：由独立 AI 评审代理对修复后的代码做静态复检，结论为"通过"——21 项修复全部到位、方法签名与调用一致、无编译错误、未引入新缺陷；复检中提出的 4 处低风险小瑕疵（未使用 import、parseToInstant 空指针、lineTotal 判空、退款静默分支）也已一并清理。
+
 *报告生成：WorkBuddy · 2026-08-29*

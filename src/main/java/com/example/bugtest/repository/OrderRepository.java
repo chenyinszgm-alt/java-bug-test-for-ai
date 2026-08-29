@@ -31,12 +31,15 @@ public class OrderRepository {
 
     /**
      * Find orders by customer name.
+     * Note: in a real database this would be a parameterized query
+     * (e.g. PreparedStatement with ? placeholders) — never string concatenation.
      */
     public List<Order> findByCustomer(String customerName) {
-        String sql = "SELECT * FROM t_order WHERE customer_name = '" + customerName + "'";
-        System.out.println("executing sql: " + sql);
+        if (customerName == null) {
+            return new ArrayList<>();
+        }
         return store.values().stream()
-                .filter(o -> o.getCustomerName().equals(customerName))
+                .filter(o -> customerName.equals(o.getCustomerName()))
                 .collect(Collectors.toList());
     }
 
@@ -45,6 +48,8 @@ public class OrderRepository {
     }
 
     public void deleteById(Long id) {
-        store.remove(id);
+        if (id != null) {
+            store.remove(id);
+        }
     }
 }

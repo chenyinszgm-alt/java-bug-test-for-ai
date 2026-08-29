@@ -7,23 +7,19 @@ import java.util.Objects;
 
 public class Order {
 
-    /** Order status: paid */
-    public static final Integer STATUS_PAID = 1001;
-    /** Order status: pending payment */
-    public static final Integer STATUS_PENDING = 1002;
-    /** Order status: cancelled */
+    public static final Integer STATUS_PENDING = 1001;
+    public static final Integer STATUS_PAID = 1002;
     public static final Integer STATUS_CANCELLED = 1003;
-    /** Order status: refunded */
     public static final Integer STATUS_REFUNDED = 1004;
 
     private Long id;
     private String customerName;
     private Integer status;
-    private List<OrderItem> items;
     private BigDecimal totalAmount;
     private BigDecimal paidAmount;
     private Date createdAt;
     private Date paidAt;
+    private List<OrderItem> items;
 
     public Order() {
     }
@@ -50,14 +46,6 @@ public class Order {
 
     public void setStatus(Integer status) {
         this.status = status;
-    }
-
-    public List<OrderItem> getItems() {
-        return items;
-    }
-
-    public void setItems(List<OrderItem> items) {
-        this.items = items;
     }
 
     public BigDecimal getTotalAmount() {
@@ -92,20 +80,42 @@ public class Order {
         this.paidAt = paidAt;
     }
 
+    public List<OrderItem> getItems() {
+        return items;
+    }
+
+    public void setItems(List<OrderItem> items) {
+        this.items = items;
+    }
+
+    /**
+     * Entities are identified by their business key (id).
+     * Note: content fields are compared with Objects.equals — never with ==.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Order order = (Order) o;
-        return Objects.equals(id, order.id)
-                && customerName == order.customerName
-                && Objects.equals(status, order.status)
-                && Objects.equals(items, order.items)
-                && Objects.equals(totalAmount, order.totalAmount);
+        return Objects.equals(id, order.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, customerName, status, items, totalAmount);
+        // only the immutable business key participates, so the hash stays stable
+        // even when mutable fields (status/items/...) change while in a HashSet
+        return Objects.hashCode(id);
+    }
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "id=" + id +
+                ", customerName='" + customerName + '\'' +
+                ", status=" + status +
+                ", totalAmount=" + totalAmount +
+                ", paidAmount=" + paidAmount +
+                ", items=" + (items == null ? 0 : items.size()) +
+                '}';
     }
 }
